@@ -1,14 +1,25 @@
-﻿using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Duende.IdentityServer.EntityFramework.Options;
+﻿using Microsoft.EntityFrameworkCore;
+using Infrastructure.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Data;
-public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
+public class ApplicationDbContext : IdentityDbContext<Employee>
 {
-    public ApplicationDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> operationalStoreOptions)
-        : base(options, operationalStoreOptions)
-    {
+    private readonly IConfiguration _configuration;
 
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> option, IConfiguration configuration) : base(option)
+    {
+        _configuration = configuration;
+    }
+
+    public DbSet<Project> Projects { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseSqlite(_configuration.GetConnectionString("DefaultConnection"), o => o.MigrationsHistoryTable(
+            tableName: HistoryRepository.DefaultTableName,
+            schema: "AppUser"));
     }
 }
